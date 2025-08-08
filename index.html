@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bellringer Launcher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .spin-animation {
+            animation: spin 2s linear infinite;
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.8s ease-out;
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(66, 133, 244, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(66, 133, 244, 0.8); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(5px);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <!-- Main Container -->
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="text-6xl mb-4">🔔</div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Bellringer Launcher</h1>
+            <p class="text-gray-600">¡Elige un rompe-hielo al azar para comenzar la clase!</p>
+        </div>
+        
+        <!-- Language Toggle -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-2xl">
+            <button id="translateBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg text-sm mb-3 transition-all duration-300">
+                🌐 Translate to English
+            </button>
+            <p class="text-xs text-black font-normal">Bellringers disponibles: <span id="dataCount">1</span></p>
+        </div>
+        
+        <!-- Main Button -->
+        <div class="mb-6">
+            <button id="launchBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 pulse-glow transform hover:scale-105">
+                <span id="btnText">🎲 Elegir Bellringer</span>
+                <div id="spinner" class="hidden inline-block w-6 h-6 border-2 border-white border-t-transparent rounded-full spin-animation ml-2"></div>
+            </button>
+        </div>
+    </div>
+    
+
+    
+    <!-- Bell-Ringer Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 z-50">
+        <div id="modalContent" class="bg-blue-600 rounded-3xl shadow-2xl max-w-4xl w-full p-8 text-white bounce-in relative">
+            <!-- Close Button -->
+            <button id="closeBtn" class="absolute top-4 right-4 text-white hover:text-gray-200 text-2xl font-bold z-10">×</button>
+            
+            <!-- Bell-Ringer Content -->
+            <div class="text-center">
+                <div class="text-5xl mb-4">🎉</div>
+                <h2 class="text-2xl font-bold mb-6">¡Bellringer del Día!</h2>
+                
+                <!-- Main Content Area -->
+                <div id="mainContent" class="bg-white bg-opacity-20 rounded-2xl p-6 mb-6">
+                    <h3 id="bellRingerName" class="text-2xl font-bold mb-6">Nombre del Bellringer</h3>
+                    
+                    <!-- Content Layout (changes based on image presence) -->
+                    <div id="contentLayout" class="grid grid-cols-1 gap-6">
+                        <!-- Text Content -->
+                        <div id="textContent">
+                            <!-- Instrucciones (Siempre Visible) -->
+                            <div class="bg-white bg-opacity-70 rounded-xl p-4 mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 id="studentLabel" class="text-lg font-semibold text-purple-600">📝 Instrucciones:</h4>
+                                    <button id="instructionToggle" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1 transition-all duration-300 text-sm" title="Toggle instruction language">
+                                        🌐
+                                    </button>
+                                </div>
+                                <p id="studentInstructions" class="text-base leading-relaxed text-black">Instrucciones para los estudiantes aparecerán aquí...</p>
+                            </div>
+                            
+                            <!-- Description Toggle -->
+                            <div class="flex items-center justify-center mb-4">
+                                <button id="descriptionBtn" class="bg-white bg-opacity-30 hover:bg-opacity-40 rounded-full p-2 transition-all duration-300">
+                                    <span class="text-xl">❓</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Description (hidden by default) -->
+                            <div id="description" class="hidden text-sm leading-relaxed mb-4 bg-white bg-opacity-10 rounded-lg p-4">
+                                <p id="descriptionText">Descripción completa del bellringer aparecerá aquí...</p>
+                            </div>
+                            
+                            <!-- Link Button -->
+                            <button id="linkBtn" class="bg-white bg-opacity-30 hover:bg-opacity-40 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 text-sm">
+                                🔗 Recurso Adicional
+                            </button>
+                        </div>
+                        
+                        <!-- Image Display (if URL is an image) -->
+                        <div id="imageContainer" class="hidden">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-4 relative">
+                                <img id="bellRingerImage" class="w-full max-w-md mx-auto rounded-lg shadow-lg" alt="Bellringer Visual">
+                                <button id="zoomBtn" class="absolute top-2 right-2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all duration-300" title="Zoom image">
+                                    🔍
+                                </button>
+                                <div id="imageWatermark" class="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded text-right">
+                                    <span id="watermarkText"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="chooseAnotherBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
+                        🎲 Elegir Otro Distinto
+                    </button>
+                    <button id="exitBtn" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-all duration-300">
+                        ✨ ¡Perfecto! Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div id="zoomModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
+        <div class="relative max-w-full max-h-full">
+            <button id="closeZoomBtn" class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">×</button>
+            <img id="zoomedImage" class="max-w-full max-h-full object-contain rounded-lg" alt="Zoomed Bellringer Visual">
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-black bg-opacity-20 text-white text-center py-2 text-xs">
+        <p>© 2025 por Eduardo Ruiz (@ejruizgarcia). Esta app ha sido desarrollada utilizando Canva Code y tiene licencia CC BY-NC 4.0.</p>
+    </footer>
+
+    <script>
+        // Bellringers Database (Bilingual)
+        let bellRingers = [
+            {
+                id: 1,
+                name: {
+                    english: "Picture of the Day",
+                    spanish: "Imagen del Día"
+                },
+                link: "https://images.pexels.com/photos/189349/pexels-photo-189349.jpeg",
+                description: {
+                    english: "Students practice descriptive vocabulary by looking at an interesting image and writing down words or simple sentences.",
+                    spanish: "Los estudiantes practican vocabulario descriptivo observando una imagen interesante y escribiendo palabras o frases simples."
+                },
+                instructions: {
+                    english: "Hey there! Take a look at this cool picture. Can you write down 5 things you see? Go!",
+                    spanish: "¡Hola! Echa un vistazo a esta imagen genial. ¿Puedes escribir 5 cosas que veas? ¡Vamos!"
+                }
+            },
+            {
+                id: 2,
+                name: {
+                    english: "Daily Riddle",
+                    spanish: "Adivinanza Diaria"
+                },
+                link: "",
+                description: {
+                    english: "This activity challenges students' logical thinking and vocabulary in a fun way. They guess the answer to a simple riddle.",
+                    spanish: "Esta actividad desafía el pensamiento lógico y vocabulario de los estudiantes de manera divertida. Adivinan la respuesta a una adivinanza simple."
+                },
+                instructions: {
+                    english: "Time for a riddle! I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I? Think fast!",
+                    spanish: "¡Hora de una adivinanza! Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy? ¡Piensa rápido!"
+                }
+            },
+            {
+                id: 3,
+                name: {
+                    english: "What's Wrong Here?",
+                    spanish: "¿Qué Está Mal Aquí?"
+                },
+                link: "https://s3-ap-southeast-1.amazonaws.com/motoristprod/editors%2Fimages%2F1671527437-flood-gf792c46f5_1920.jpg",
+                description: {
+                    english: "Students look at an image that has illogical elements and must identify what is wrong, practicing vocabulary and observation skills.",
+                    spanish: "Los estudiantes observan una imagen con elementos ilógicos y deben identificar qué está mal, practicando vocabulario y habilidades de observación."
+                },
+                instructions: {
+                    english: "Look closely at this picture. Something is very strange here. Can you find and write down what is wrong?",
+                    spanish: "Mira atentamente esta imagen. Algo está muy extraño aquí. ¿Puedes encontrar y escribir qué está mal?"
+                }
+            },
+            {
+                id: 4,
+                name: {
+                    english: "Finish the Drawing",
+                    spanish: "Completa el Dibujo"
+                },
+                link: "https://images.squarespace-cdn.com/content/v1/5a90557e1137a6fdeeb6bb3e/1671527437-W9IGDPOXT7WGLALEH8J8/squigglegame.jpg",
+                description: {
+                    english: "This sparks creativity and vocabulary. Students are given a simple starting shape and must complete the drawing into something recognizable.",
+                    spanish: "Esto despierta la creatividad y vocabulario. Los estudiantes reciben una forma simple inicial y deben completar el dibujo en algo reconocible."
+                },
+                instructions: {
+                    english: "Look at this squiggle! What can it be? A monster? A flower? A superhero? Grab your pencil and finish the drawing!",
+                    spanish: "¡Mira este garabato! ¿Qué puede ser? ¿Un monstruo? ¿Una flor? ¿Un superhéroe? ¡Toma tu lápiz y completa el dibujo!"
+                }
+            },
+            {
+                id: 5,
+                name: {
+                    english: "Word Chain",
+                    spanish: "Cadena de Palabras"
+                },
+                link: "",
+                description: {
+                    english: "A great vocabulary recall game. The teacher provides a starting word, and students write a word that starts with the last letter of the previous word.",
+                    spanish: "Un excelente juego de recordar vocabulario. El profesor proporciona una palabra inicial, y los estudiantes escriben una palabra que comience con la última letra de la palabra anterior."
+                },
+                instructions: {
+                    english: "Let's build a word chain! I'll start with 'English'. The next word must start with 'h'. Your turn! How long can we make it?",
+                    spanish: "¡Construyamos una cadena de palabras! Empiezo con 'English'. La siguiente palabra debe empezar con 'h'. ¡Tu turno! ¿Qué tan larga podemos hacerla?"
+                }
+            },
+            {
+                id: 6,
+                name: {
+                    english: "Spot the Difference",
+                    spanish: "Encuentra las Diferencias"
+                },
+                link: "https://img.jagranjosh.com/images/2023/December/6122023/spot-5-differences-in-church-picture.jpg",
+                description: {
+                    english: "A visual puzzle that enhances concentration and vocabulary. Students find a number of differences between two similar images.",
+                    spanish: "Un rompecabezas visual que mejora la concentración y vocabulario. Los estudiantes encuentran varias diferencias entre dos imágenes similares."
+                },
+                instructions: {
+                    english: "Eagle eyes, activate! Can you find the 5 differences between these two pictures? Circle them!",
+                    spanish: "¡Ojos de águila, actívense! ¿Puedes encontrar las 5 diferencias entre estas dos imágenes? ¡Enciérralas en un círculo!"
+                }
+            },
+            {
+                id: 7,
+                name: {
+                    english: "Quick Math Puzzle",
+                    spanish: "Rompecabezas Matemático Rápido"
+                },
+                link: "",
+                description: {
+                    english: "This integrates basic math with English, making students think logically in another language. It's a simple, quick-to-solve number puzzle.",
+                    spanish: "Esto integra matemáticas básicas con inglés, haciendo que los estudiantes piensen lógicamente en otro idioma. Es un rompecabezas numérico simple y rápido de resolver."
+                },
+                instructions: {
+                    english: "Time for a brain teaser! A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?",
+                    spanish: "¡Hora de un acertijo mental! Un bate y una pelota cuestan $1.10 en total. El bate cuesta $1.00 más que la pelota. ¿Cuánto cuesta la pelota?"
+                }
+            },
+            {
+                id: 8,
+                name: {
+                    english: "What Happens Next?",
+                    spanish: "¿Qué Pasa Después?"
+                },
+                link: "https://st.depositphotos.com/1001370/3032/i/950/depositphotos_30328233-stock-photo-child-wearing-red-rain-boots.jpg",
+                description: {
+                    english: "Students look at an image depicting a moment just before an action and predict what will happen next, encouraging inference skills.",
+                    spanish: "Los estudiantes observan una imagen que muestra un momento justo antes de una acción y predicen qué pasará después, fomentando habilidades de inferencia."
+                },
+                instructions: {
+                    english: "Oh, look out! Based on this picture, what do you think is going to happen in the next 3 seconds? Write one sentence.",
+                    spanish: "¡Oh, cuidado! Basándote en esta imagen, ¿qué crees que va a pasar en los próximos 3 segundos? Escribe una oración."
+                }
+            },
+            {
+                id: 9,
+                name: {
+                    english: "Summer Dream",
+                    spanish: "Sueño de Verano"
+                },
+                link: "",
+                description: {
+                    english: "A quick research task. Students use the internet to find information, which can be used for a future speaking activity.",
+                    spanish: "Una tarea de investigación rápida. Los estudiantes usan internet para encontrar información, que puede usarse para una futura actividad de conversación."
+                },
+                instructions: {
+                    english: "Let's dream about summer! Quickly search online and find 3 cool places you would like to visit. Be ready to share one if I ask!",
+                    spanish: "¡Soñemos con el verano! Busca rápidamente en línea y encuentra 3 lugares geniales que te gustaría visitar. ¡Prepárate para compartir uno si te pregunto!"
+                }
+            },
+            {
+                id: 10,
+                name: {
+                    english: "Unscramble the Words",
+                    spanish: "Desordena las Palabras"
+                },
+                link: "",
+                description: {
+                    english: "A great vocabulary review. Students see a set of scrambled letters and must form a correct word related to a specific topic.",
+                    spanish: "Una excelente revisión de vocabulario. Los estudiantes ven un conjunto de letras desordenadas y deben formar una palabra correcta relacionada con un tema específico."
+                },
+                instructions: {
+                    english: "Oh no, the letters are all mixed up! Can you unscramble these school-related words? 1. Kobo 2. Chereta 3. Tudsnet",
+                    spanish: "¡Oh no, las letras están todas mezcladas! ¿Puedes desenredar estas palabras relacionadas con la escuela? 1. Kobo 2. Chereta 3. Tudsnet"
+                }
+            },
+            {
+                id: 11,
+                name: {
+                    english: "Emoji Story",
+                    spanish: "Historia de Emojis"
+                },
+                link: "",
+                description: {
+                    english: "Students interpret a short story told through emojis and write what they think is happening. This is great for modern, visual learners.",
+                    spanish: "Los estudiantes interpretan una historia corta contada a través de emojis y escriben lo que creen que está pasando. Esto es genial para estudiantes visuales modernos."
+                },
+                instructions: {
+                    english: "Can you read this emoji story? 👩➡️️✈️➡️️🇪🇸☀️. What do you think it means? Write one sentence!",
+                    spanish: "¿Puedes leer esta historia de emojis? 👩➡️️✈️➡️️🇪🇸☀️. ¿Qué crees que significa? ¡Escribe una oración!"
+                }
+            },
+            {
+                id: 12,
+                name: {
+                    english: "Guess the Object",
+                    spanish: "Adivina el Objeto"
+                },
+                link: "https://www.stockvault.net/data/2016/11/06/215299/preview16.jpg",
+                description: {
+                    english: "Students see a close-up or abstract image of an object and must guess what it is, practicing vocabulary and inference.",
+                    spanish: "Los estudiantes ven una imagen de cerca o abstracta de un objeto y deben adivinar qué es, practicando vocabulario e inferencia."
+                },
+                instructions: {
+                    english: "What in the world is this? Look at this close-up photo and try to guess the object!",
+                    spanish: "¿Qué diablos es esto? ¡Mira esta foto de cerca e intenta adivinar el objeto!"
+                }
+            },
+            {
+                id: 13,
+                name: {
+                    english: "Odd One Out (Images)",
+                    spanish: "El Diferente (Imágenes)"
+                },
+                link: "https://i.imgur.com/YpA4jC7.png",
+                description: {
+                    english: "Students look at four images and decide which one doesn't belong in the group, explaining why.",
+                    spanish: "Los estudiantes observan cuatro imágenes y deciden cuál no pertenece al grupo, explicando por qué."
+                },
+                instructions: {
+                    english: "Look at these four pictures. Which one is the odd one out? Write it down and why!",
+                    spanish: "Mira estas cuatro imágenes. ¿Cuál es la diferente? ¡Escríbelo y por qué!"
+                }
+            },
+            {
+                id: 14,
+                name: {
+                    english: "Would You Rather?",
+                    spanish: "¿Qué Preferirías?"
+                },
+                link: "",
+                description: {
+                    english: "A fun, opinion-based question that gets students thinking and prepares them for expressing choices. No right or wrong answer.",
+                    spanish: "Una pregunta divertida basada en opiniones que hace pensar a los estudiantes y los prepara para expresar elecciones. No hay respuesta correcta o incorrecta."
+                },
+                instructions: {
+                    english: "Quick question! Would you rather be able to fly OR be invisible? Think about it and be ready to say why!",
+                    spanish: "¡Pregunta rápida! ¿Preferirías poder volar O ser invisible? ¡Piénsalo y prepárate para decir por qué!"
+                }
+            },
+            {
+                id: 15,
+                name: {
+                    english: "Caption This!",
+                    spanish: "¡Ponle Título!"
+                },
+                link: "https://media.istockphoto.com/id/1361394182/es/foto/divertido-retrato-de-gato-brit%C3%A1nico-de-pelo-corto-que-parece-sorprendido-o-sorprendido.jpg?s=2048x2048&w=is&k=20&c=oyWsIq4aO9OI9Hl9ZDFHnZGFa12OnYv-73YbRaBkcP4=",
+                description: {
+                    english: "Students look at a funny or interesting photo and write a short, funny caption for it.",
+                    spanish: "Los estudiantes observan una foto divertida o interesante y escriben un título corto y gracioso para ella."
+                },
+                instructions: {
+                    english: "This animal needs a voice! Look at this photo and write a funny caption for it. What is it thinking?",
+                    spanish: "¡Este animal necesita una voz! Mira esta foto y escribe un título gracioso para ella. ¿Qué está pensando?"
+                }
+            },
+            {
+                id: 16,
+                name: {
+                    english: "Alphabet Race",
+                    spanish: "Carrera del Alfabeto"
+                },
+                link: "",
+                description: {
+                    english: "Students race to write one word for each letter of the alphabet, related to a given category (e.g., food, animals).",
+                    spanish: "Los estudiantes compiten para escribir una palabra por cada letra del alfabeto, relacionada con una categoría dada (ej. comida, animales)."
+                },
+                instructions: {
+                    english: "Ready for a race? The category is FOOD. Write down one food for each letter of the alphabet, from A to Z. Go, go, go!",
+                    spanish: "¿Listos para una carrera? La categoría es COMIDA. Escribe una comida para cada letra del alfabeto, de la A a la Z. ¡Vamos, vamos, vamos!"
+                }
+            },
+            {
+                id: 17,
+                name: {
+                    english: "Describe this Person",
+                    spanish: "Describe a esta Persona"
+                },
+                link: "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg",
+                description: {
+                    english: "Students practice descriptive adjectives for people by looking at a portrait and writing a short description.",
+                    spanish: "Los estudiantes practican adjetivos descriptivos para personas observando un retrato y escribiendo una descripción corta."
+                },
+                instructions: {
+                    english: "Take a look at the person in this photo. Can you describe them? Write two sentences about their appearance or clothes.",
+                    spanish: "Echa un vistazo a la persona en esta foto. ¿Puedes describirla? Escribe dos oraciones sobre su apariencia o ropa."
+                }
+            },
+            {
+                id: 18,
+                name: {
+                    english: "Two Truths and a Lie",
+                    spanish: "Dos Verdades y una Mentira"
+                },
+                link: "",
+                description: {
+                    english: "The teacher writes three \"facts\" on the board about a topic. Two are true, one is a lie. Students guess the lie.",
+                    spanish: "El profesor escribe tres \"hechos\" en la pizarra sobre un tema. Dos son verdaderos, uno es mentira. Los estudiantes adivinan la mentira."
+                },
+                instructions: {
+                    english: "I'm going to tell you three things about the Eiffel Tower. Two are true, one is a lie. Can you spot the lie? 1. It was built in 1889. 2. It is made of gold. 3. It is in Paris, France.",
+                    spanish: "Te voy a decir tres cosas sobre la Torre Eiffel. Dos son verdaderas, una es mentira. ¿Puedes detectar la mentira? 1. Fue construida en 1889. 2. Está hecha de oro. 3. Está en París, Francia."
+                }
+            },
+            {
+                id: 19,
+                name: {
+                    english: "Memory Game",
+                    spanish: "Juego de Memoria"
+                },
+                link: "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                description: {
+                    english: "Show students an image with many objects for 30 seconds. Then, hide it and ask them to write down as many objects as they remember.",
+                    spanish: "Muestra a los estudiantes una imagen con muchos objetos por 30 segundos. Luego, ocúltala y pídeles que escriban todos los objetos que recuerden."
+                },
+                instructions: {
+                    english: "Look at this picture very carefully for 30 seconds. I'm going to hide it, and you have to write down everything you remember seeing. Ready?",
+                    spanish: "Mira esta imagen muy cuidadosamente por 30 segundos. La voy a ocultar, y tienes que escribir todo lo que recuerdes haber visto. ¿Listos?"
+                }
+            },
+            {
+                id: 20,
+                name: {
+                    english: "Guess the Landmark",
+                    spanish: "Adivina el Monumento"
+                },
+                link: "https://media.iatiseguros.com/wp-content/uploads/2017/01/04004048/visitar-taj-mahal-2-1.jpg",
+                description: {
+                    english: "Students look at a photo of a famous world landmark and must write down its name and/or the city/country it is in.",
+                    spanish: "Los estudiantes observan una foto de un monumento mundial famoso y deben escribir su nombre y/o la ciudad/país donde está."
+                },
+                instructions: {
+                    english: "Where in the world are we? Look at this famous place. Do you know its name and where it is?",
+                    spanish: "¿Dónde en el mundo estamos? Mira este lugar famoso. ¿Sabes su nombre y dónde está?"
+                }
+            },
+            {
+                id: 21,
+                name: {
+                    english: "Word Association",
+                    spanish: "Asociación de Palabras"
+                },
+                link: "",
+                description: {
+                    english: "The teacher says a word, and students write down the first three words that come to their mind.",
+                    spanish: "El profesor dice una palabra, y los estudiantes escriben las primeras tres palabras que les vienen a la mente."
+                },
+                instructions: {
+                    english: "I'm going to say a word. I want you to write down the first three words that pop into your head. The word is... BEACH.",
+                    spanish: "Voy a decir una palabra. Quiero que escribas las primeras tres palabras que se te ocurran. La palabra es... PLAYA."
+                }
+            },
+            {
+                id: 22,
+                name: {
+                    english: "Guess the Sound",
+                    spanish: "Adivina el Sonido"
+                },
+                link: "https://www.youtube.com/watch?v=n1m4h79JZso",
+                description: {
+                    english: "Play a short audio clip of a sound. Students have to write down what they think the sound is.",
+                    spanish: "Reproduce un clip de audio corto de un sonido. Los estudiantes tienen que escribir lo que creen que es el sonido."
+                },
+                instructions: {
+                    english: "Listen closely! I'm going to play a sound. Can you guess what it is? Write it down!",
+                    spanish: "¡Escucha atentamente! Voy a reproducir un sonido. ¿Puedes adivinar qué es? ¡Escríbelo!"
+                }
+            },
+            {
+                id: 23,
+                name: {
+                    english: "Adjective Adventure",
+                    spanish: "Aventura de Adjetivos"
+                },
+                link: "https://images.pexels.com/photos/1029796/pexels-photo-1029796.jpeg",
+                description: {
+                    english: "The teacher provides an image of an interesting object, and students must list as many adjectives as they can to describe it.",
+                    spanish: "El profesor proporciona una imagen de un objeto interesante, y los estudiantes deben listar tantos adjetivos como puedan para describirlo."
+                },
+                instructions: {
+                    english: "Let's go on an adjective adventure! Look at this object. How many adjectives can you think of to describe it? List them all!",
+                    spanish: "¡Vamos a una aventura de adjetivos! Mira este objeto. ¿Cuántos adjetivos puedes pensar para describirlo? ¡Lístalos todos!"
+                }
+            },
+            {
+                id: 24,
+                name: {
+                    english: "Simon Says... Write!",
+                    spanish: "Simón Dice... ¡Escribe!"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a series of \"Simon Says\" commands, but instead of doing the action, students write it down.",
+                    spanish: "El profesor da una serie de comandos de \"Simón Dice\", pero en lugar de hacer la acción, los estudiantes la escriben."
+                },
+                instructions: {
+                    english: "Let's play Simon Says... with a twist! I'm going to give you some commands. If I say 'Simon says', write down the sentence. If I don't, don't write anything!",
+                    spanish: "¡Juguemos Simón Dice... con un giro! Te voy a dar algunos comandos. Si digo 'Simón dice', escribe la oración. ¡Si no lo digo, no escribas nada!"
+                }
+            },
+            {
+                id: 25,
+                name: {
+                    english: "Story Starter",
+                    spanish: "Iniciador de Historia"
+                },
+                link: "",
+                description: {
+                    english: "The teacher writes the beginning of a sentence on the board. Students have to complete the sentence in a creative way.",
+                    spanish: "El profesor escribe el comienzo de una oración en la pizarra. Los estudiantes tienen que completar la oración de manera creativa."
+                },
+                instructions: {
+                    english: "Let's start a story! I'll give you the beginning, and you finish it. Here it is: 'Once upon a time, in a land far, far away...'",
+                    spanish: "¡Empecemos una historia! Te doy el comienzo, y tú la terminas. Aquí está: 'Había una vez, en una tierra muy, muy lejana...'"
+                }
+            },
+            {
+                id: 26,
+                name: {
+                    english: "Create a Dialogue",
+                    spanish: "Crea un Diálogo"
+                },
+                link: "https://images.pexels.com/photos/1181403/pexels-photo-1181403.jpeg",
+                description: {
+                    english: "Students look at a picture of two people or characters and write one line of dialogue for each of them.",
+                    spanish: "Los estudiantes observan una imagen de dos personas o personajes y escriben una línea de diálogo para cada uno de ellos."
+                },
+                instructions: {
+                    english: "These two are talking. What are they saying? Write one sentence for the person on the left, and one for the person on the right.",
+                    spanish: "Estos dos están hablando. ¿Qué están diciendo? Escribe una oración para la persona de la izquierda, y una para la de la derecha."
+                }
+            },
+            {
+                id: 27,
+                name: {
+                    english: "Mixed-Up Proverbs",
+                    spanish: "Proverbios Mezclados"
+                },
+                link: "",
+                description: {
+                    english: "The teacher writes a well-known proverb on the board with the words mixed up. Students have to put the words in the correct order.",
+                    spanish: "El profesor escribe un proverbio conocido en la pizarra con las palabras mezcladas. Los estudiantes tienen que poner las palabras en el orden correcto."
+                },
+                instructions: {
+                    english: "I've mixed up a famous proverb! Can you put the words in the right order? an keeps doctor the a apple day away",
+                    spanish: "¡He mezclado un proverbio famoso! ¿Puedes poner las palabras en el orden correcto? manzana una médico al día mantiene el alejado"
+                }
+            },
+            {
+                id: 28,
+                name: {
+                    english: "How Many Can You Find?",
+                    spanish: "¿Cuántos Puedes Encontrar?"
+                },
+                link: "https://rampoines.com/50744-large_default/290-gr-piezas-lego-anos-70.jpg",
+                description: {
+                    english: "Students look at a busy image and have to count a specific object, practicing numbers and observation.",
+                    spanish: "Los estudiantes observan una imagen ocupada y tienen que contar un objeto específico, practicando números y observación."
+                },
+                instructions: {
+                    english: "Let's test your eyes! Look at this picture. How many triangles can you find? Write down the number.",
+                    spanish: "¡Pongamos a prueba tus ojos! Mira esta imagen. ¿Cuántos triángulos puedes encontrar? Escribe el número."
+                }
+            },
+            {
+                id: 29,
+                name: {
+                    english: "Who Am I?",
+                    spanish: "¿Quién Soy?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher thinks of a famous person and gives clues. Students have to guess who it is.",
+                    spanish: "El profesor piensa en una persona famosa y da pistas. Los estudiantes tienen que adivinar quién es."
+                },
+                instructions: {
+                    english: "I'm thinking of a famous person. I'm a singer, I'm from the USA, and my nickname is 'The King of Pop'. Who am I?",
+                    spanish: "Estoy pensando en una persona famosa. Soy cantante, soy de Estados Unidos, y mi apodo es 'El Rey del Pop'. ¿Quién soy?"
+                }
+            },
+            {
+                id: 30,
+                name: {
+                    english: "Describe the Weather",
+                    spanish: "Describe el Clima"
+                },
+                link: "https://images.pexels.com/photos/7002970/pexels-photo-7002970.jpeg",
+                description: {
+                    english: "Students look at a photo of a specific weather condition and describe it in one or two sentences.",
+                    spanish: "Los estudiantes observan una foto de una condición climática específica y la describen en una o dos oraciones."
+                },
+                instructions: {
+                    english: "Brrr! Look at this picture. How would you describe the weather? Write one sentence about it.",
+                    spanish: "¡Brrr! Mira esta imagen. ¿Cómo describirías el clima? Escribe una oración sobre ello."
+                }
+            },
+            {
+                id: 31,
+                name: {
+                    english: "If I Were...",
+                    spanish: "Si Yo Fuera..."
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a prompt (e.g., \"If I were an animal, I would be...\"). Students complete the sentence.",
+                    spanish: "El profesor da una pregunta (ej. \"Si yo fuera un animal, sería...\"). Los estudiantes completan la oración."
+                },
+                instructions: {
+                    english: "Let's use our imagination! Complete this sentence: 'If I were an animal, I would be a...'",
+                    spanish: "¡Usemos nuestra imaginación! Completa esta oración: 'Si yo fuera un animal, sería un...'"
+                }
+            },
+            {
+                id: 32,
+                name: {
+                    english: "Guess the Emotion",
+                    spanish: "Adivina la Emoción"
+                },
+                link: "https://images.pexels.com/photos/936094/pexels-photo-936094.jpeg",
+                description: {
+                    english: "Students look at a picture of a person's face and write down the emotion they think the person is feeling.",
+                    spanish: "Los estudiantes observan una imagen del rostro de una persona y escriben la emoción que creen que la persona está sintiendo."
+                },
+                instructions: {
+                    english: "Look at this person's face. What emotion are they feeling? Happy, sad, surprised? Write it down.",
+                    spanish: "Mira el rostro de esta persona. ¿Qué emoción está sintiendo? ¿Feliz, triste, sorprendido? Escríbelo."
+                }
+            },
+            {
+                id: 33,
+                name: {
+                    english: "What's the Question?",
+                    spanish: "¿Cuál es la Pregunta?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives an answer (e.g., \"Because I was tired.\"). Students have to write the question.",
+                    spanish: "El profesor da una respuesta (ej. \"Porque estaba cansado.\"). Los estudiantes tienen que escribir la pregunta."
+                },
+                instructions: {
+                    english: "I'll give you the answer, you give me the question. The answer is: Because I was tired. What's the question?",
+                    spanish: "Te doy la respuesta, tú me das la pregunta. La respuesta es: Porque estaba cansado. ¿Cuál es la pregunta?"
+                }
+            },
+            {
+                id: 34,
+                name: {
+                    english: "ABC Story",
+                    spanish: "Historia ABC"
+                },
+                link: "",
+                description: {
+                    english: "Students try to write a short story where each sentence begins with the next letter of the alphabet.",
+                    spanish: "Los estudiantes intentan escribir una historia corta donde cada oración comience con la siguiente letra del alfabeto."
+                },
+                instructions: {
+                    english: "Let's write an ABC story! The first sentence starts with 'A', the second with 'B', the third with 'C'. Let's see how far we can get!",
+                    spanish: "¡Escribamos una historia ABC! La primera oración empieza con 'A', la segunda con 'B', la tercera con 'C'. ¡Veamos qué tan lejos podemos llegar!"
+                }
+            },
+            {
+                id: 35,
+                name: {
+                    english: "Tell a Story in 3 Words",
+                    spanish: "Cuenta una Historia en 3 Palabras"
+                },
+                link: "https://images.pexels.com/photos/247376/pexels-photo-247376.jpeg",
+                description: {
+                    english: "Students look at a powerful or interesting image and must summarize the story or feeling in just three words.",
+                    spanish: "Los estudiantes observan una imagen poderosa o interesante y deben resumir la historia o sentimiento en solo tres palabras."
+                },
+                instructions: {
+                    english: "A picture is worth a thousand words, but you only get three! Look at this photo and tell its story in just three words.",
+                    spanish: "Una imagen vale más que mil palabras, ¡pero solo tienes tres! Mira esta foto y cuenta su historia en solo tres palabras."
+                }
+            },
+            {
+                id: 36,
+                name: {
+                    english: "Desert Island Discs",
+                    spanish: "Discos de Isla Desierta"
+                },
+                link: "",
+                description: {
+                    english: "If you were stranded on a desert island, what three things would you bring with you?",
+                    spanish: "Si estuvieras varado en una isla desierta, ¿qué tres cosas te llevarías contigo?"
+                },
+                instructions: {
+                    english: "Imagine you're on a desert island! You can only bring three things with you. What would you choose? Write them down!",
+                    spanish: "¡Imagina que estás en una isla desierta! Solo puedes llevar tres cosas contigo. ¿Qué elegirías? ¡Escríbelas!"
+                }
+            },
+            {
+                id: 37,
+                name: {
+                    english: "Guess the Job",
+                    spanish: "Adivina el Trabajo"
+                },
+                link: "https://images.pexels.com/photos/5453837/pexels-photo-5453837.jpeg",
+                description: {
+                    english: "Students look at a person in uniform or with specific tools and guess their profession.",
+                    spanish: "Los estudiantes observan a una persona en uniforme o con herramientas específicas y adivinan su profesión."
+                },
+                instructions: {
+                    english: "This person has an important job. Look at their clothes and what they are doing. What is their job?",
+                    spanish: "Esta persona tiene un trabajo importante. Mira su ropa y lo que está haciendo. ¿Cuál es su trabajo?"
+                }
+            },
+            {
+                id: 38,
+                name: {
+                    english: "Opposites Attract",
+                    spanish: "Los Opuestos se Atraen"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a word (e.g., 'hot'). Students have to write the opposite.",
+                    spanish: "El profesor da una palabra (ej. 'caliente'). Los estudiantes tienen que escribir lo opuesto."
+                },
+                instructions: {
+                    english: "Let's find some opposites! The word is 'hot'. What's the opposite? Write it down.",
+                    spanish: "¡Encontremos algunos opuestos! La palabra es 'caliente'. ¿Cuál es lo opuesto? Escríbelo."
+                }
+            },
+            {
+                id: 39,
+                name: {
+                    english: "What Food is This?",
+                    spanish: "¿Qué Comida es Esta?"
+                },
+                link: "https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg",
+                description: {
+                    english: "Students look at a close-up photo of a food item and must identify it.",
+                    spanish: "Los estudiantes observan una foto de cerca de un alimento y deben identificarlo."
+                },
+                instructions: {
+                    english: "Mmm, what's cooking? Look at this close-up picture of food. Can you guess what it is?",
+                    spanish: "Mmm, ¿qué se está cocinando? Mira esta imagen de cerca de comida. ¿Puedes adivinar qué es?"
+                }
+            },
+            {
+                id: 40,
+                name: {
+                    english: "Find the Hidden Animal",
+                    spanish: "Encuentra el Animal Escondido"
+                },
+                link: "https://wl-brightside.cf.tsp.li/resize/1200x630/jpg/200/b26/d9a0f454998c7995e5fa414afd.jpg",
+                description: {
+                    english: "Students scan a camouflage photo to find the hidden animal, practicing focus and animal vocabulary.",
+                    spanish: "Los estudiantes escanean una foto de camuflaje para encontrar el animal escondido, practicando concentración y vocabulario de animales."
+                },
+                instructions: {
+                    english: "There is an animal hiding in this picture! Can you find it? Circle it or write down what animal it is.",
+                    spanish: "¡Hay un animal escondido en esta imagen! ¿Puedes encontrarlo? Enciérralo en un círculo o escribe qué animal es."
+                }
+            },
+            {
+                id: 41,
+                name: {
+                    english: "Acrostic Poem",
+                    spanish: "Poema Acróstico"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a word (e.g., 'FRIEND'). Students write a word or phrase for each letter that describes the word.",
+                    spanish: "El profesor da una palabra (ej. 'AMIGO'). Los estudiantes escriben una palabra o frase para cada letra que describa la palabra."
+                },
+                instructions: {
+                    english: "Let's write an acrostic poem! The word is FRIEND. Write a word or phrase for each letter that reminds you of a friend.",
+                    spanish: "¡Escribamos un poema acróstico! La palabra es AMIGO. Escribe una palabra o frase para cada letra que te recuerde a un amigo."
+                }
+            },
+            {
+                id: 42,
+                name: {
+                    english: "Chain Reaction",
+                    spanish: "Reacción en Cadena"
+                },
+                link: "",
+                description: {
+                    english: "The teacher starts a story with one sentence. Each student adds one sentence to continue the story orally or in writing.",
+                    spanish: "El profesor comienza una historia con una oración. Cada estudiante agrega una oración para continuar la historia oralmente o por escrito."
+                },
+                instructions: {
+                    english: "We're going to write a story together! I'll start, and then you will add the next sentence. Here's the first one: 'It was a dark and stormy night...'",
+                    spanish: "¡Vamos a escribir una historia juntos! Yo empiezo, y luego tú agregarás la siguiente oración. Aquí está la primera: 'Era una noche oscura y tormentosa...'"
+                }
+            },
+            {
+                id: 43,
+                name: {
+                    english: "What If...?",
+                    spanish: "¿Qué Pasaría Si...?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a \"what if\" scenario (e.g., \"What if you could fly?\"). Students write a sentence about what they would do.",
+                    spanish: "El profesor da un escenario de \"qué pasaría si\" (ej. \"¿Qué pasaría si pudieras volar?\"). Los estudiantes escriben una oración sobre lo que harían."
+                },
+                instructions: {
+                    english: "Let's imagine! What if you could fly? What is the first thing you would do? Write one sentence.",
+                    spanish: "¡Imaginemos! ¿Qué pasaría si pudieras volar? ¿Qué es lo primero que harías? Escribe una oración."
+                }
+            },
+            {
+                id: 44,
+                name: {
+                    english: "Tongue Twister Challenge",
+                    spanish: "Desafío de trabalenguas"
+                },
+                link: "",
+                description: {
+                    english: "Students try to say a new, more challenging tongue twister to practice pronunciation.",
+                    spanish: "Los estudiantes intentan decir un trabalenguas nuevo y más desafiante para practicar pronunciación."
+                },
+                instructions: {
+                    english: "Ready for a new tongue twister? Try saying this one fast: I saw a kitten eating chicken in the kitchen.",
+                    spanish: "¿Listos para un nuevo trabalenguas? Intenta decir este rápido: Tres tristes tigres tragaban trigo en un trigal."
+                }
+            },
+            {
+                id: 45,
+                name: {
+                    english: "Find Someone Who...",
+                    spanish: "Encuentra a Alguien Que..."
+                },
+                link: "",
+                description: {
+                    english: "Students get a list of criteria. They have to walk around the room and find classmates who fit the criteria.",
+                    spanish: "Los estudiantes reciben una lista de criterios. Tienen que caminar por el salón y encontrar compañeros que cumplan los criterios."
+                },
+                instructions: {
+                    english: "Let's play Find Someone Who...! I'm going to give you a list. You need to find a different person for each item on the list.",
+                    spanish: "¡Juguemos Encuentra a Alguien Que...! Te voy a dar una lista. Necesitas encontrar una persona diferente para cada elemento de la lista."
+                }
+            },
+            {
+                id: 46,
+                name: {
+                    english: "Find the Right Shadow",
+                    spanish: "Encuentra la Sombra Correcta"
+                },
+                link: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQIQw7mffauy0NlJHL-aFv7fHwpBsI83phGfN60_cbQ-lhVwYyyS26CkhRzZ0EalbUyUAmeCsYpPm3DqmjFjXlPRCdQjdMPKCScJo852zVKG-AQbH_cWrSvnkVjd5i7ZiyHLiBYmBUD5Js/s1600/hard-visual-brain-teaser-adults-answer.png",
+                description: {
+                    english: "Students look at an object and several shadow options, then choose the shadow that correctly matches the object. A fun visual puzzle.",
+                    spanish: "Los estudiantes observan un objeto y varias opciones de sombra, luego eligen la sombra que coincide correctamente con el objeto. Un rompecabezas visual divertido."
+                },
+                instructions: {
+                    english: "Be a shadow detective! Look at the astronaut. Which shadow is the correct one? A, B, C, or D?",
+                    spanish: "¡Sé un detective de sombras! Mira al astronauta. ¿Cuál sombra es la correcta? ¿A, B, C, o D?"
+                }
+            },
+            {
+                id: 47,
+                name: {
+                    english: "What's Missing?",
+                    spanish: "¿Qué Falta?"
+                },
+                link: "https://larryferlazzo.edublogs.org/files/2019/07/i_spy_1563840974.jpg",
+                description: {
+                    english: "Show students a picture with a common object clearly missing. They have to guess what's missing from the scene.",
+                    spanish: "Muestra a los estudiantes una imagen con un objeto común claramente faltante. Tienen que adivinar qué falta en la escena."
+                },
+                instructions: {
+                    english: "Look at this picture of a dining table. Something important is missing! Can you guess what it is?",
+                    spanish: "Mira esta imagen de una mesa de comedor. ¡Algo importante falta! ¿Puedes adivinar qué es?"
+                }
+            },
+            {
+                id: 48,
+                name: {
+                    english: "Word Ladder",
+                    spanish: "Escalera de Palabras"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives two words. Students have to change one letter at a time to get from the first word to the second.",
+                    spanish: "El profesor da dos palabras. Los estudiantes tienen que cambiar una letra a la vez para ir de la primera palabra a la segunda."
+                },
+                instructions: {
+                    english: "Let's play Word Ladder! Start with the word 'cat'. Change one letter at a time to make a new word. Can you get to 'dog' in three steps?",
+                    spanish: "¡Juguemos Escalera de Palabras! Empieza con la palabra 'gato'. Cambia una letra a la vez para hacer una nueva palabra. ¿Puedes llegar a 'perro' en tres pasos?"
+                }
+            },
+            {
+                id: 49,
+                name: {
+                    english: "Describe this Room",
+                    spanish: "Describe esta Habitación"
+                },
+                link: "https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg",
+                description: {
+                    english: "Students look at a picture of an unusual or interesting room and write a sentence describing it or an object in it.",
+                    spanish: "Los estudiantes observan una imagen de una habitación inusual o interesante y escriben una oración describiéndola o un objeto en ella."
+                },
+                instructions: {
+                    english: "Would you live here? Look at this interesting room. Write one sentence describing something you see.",
+                    spanish: "¿Vivirías aquí? Mira esta habitación interesante. Escribe una oración describiendo algo que veas."
+                }
+            },
+            {
+                id: 50,
+                name: {
+                    english: "My Superhero Power",
+                    spanish: "Mi Poder de Superhéroe"
+                },
+                link: "",
+                description: {
+                    english: "If you could have any superhero power, what would it be and why?",
+                    spanish: "Si pudieras tener cualquier poder de superhéroe, ¿cuál sería y por qué?"
+                },
+                instructions: {
+                    english: "If you could be a superhero, what would your power be? And why would you choose it? Write it down!",
+                    spanish: "Si pudieras ser un superhéroe, ¿cuál sería tu poder? ¿Y por qué lo elegirías? ¡Escríbelo!"
+                }
+            },
+            {
+                id: 51,
+                name: {
+                    english: "Quick Write: Gratitude",
+                    spanish: "Escritura Rápida: Gratitud"
+                },
+                link: "",
+                description: {
+                    english: "Students write down three things they are grateful for.",
+                    spanish: "Los estudiantes escriben tres cosas por las que están agradecidos."
+                },
+                instructions: {
+                    english: "Let's take a moment to be grateful. Write down three things you are thankful for today.",
+                    spanish: "Tomemos un momento para estar agradecidos. Escribe tres cosas por las que estás agradecido hoy."
+                }
+            },
+            {
+                id: 52,
+                name: {
+                    english: "Finish the Idiom",
+                    spanish: "Completa el Modismo"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives the beginning of a common idiom (e.g., \"A piece of...\"). Students have to complete it.",
+                    spanish: "El profesor da el comienzo de un modismo común (ej. \"Pan comido...\"). Los estudiantes tienen que completarlo."
+                },
+                instructions: {
+                    english: "Let's learn some idioms! Can you finish this one? A piece of... (Answer: cake)",
+                    spanish: "¡Aprendamos algunos modismos! ¿Puedes completar este? Pan... (Respuesta: comido)"
+                }
+            },
+            {
+                id: 53,
+                name: {
+                    english: "What's the Time?",
+                    spanish: "¿Qué Hora Es?"
+                },
+                link: "https://images.pexels.com/photos/210558/pexels-photo-210558.jpeg",
+                description: {
+                    english: "The teacher shows an image of a clock face. Students have to write down the time.",
+                    spanish: "El profesor muestra una imagen de un reloj. Los estudiantes tienen que escribir la hora."
+                },
+                instructions: {
+                    english: "Look at the clock! What time is it? Write it down.",
+                    spanish: "¡Mira el reloj! ¿Qué hora es? Escríbelo."
+                }
+            },
+            {
+                id: 54,
+                name: {
+                    english: "If I Won the Lottery...",
+                    spanish: "Si Ganara la Lotería..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about what they would do if they won the lottery.",
+                    spanish: "Los estudiantes escriben una oración sobre lo que harían si ganaran la lotería."
+                },
+                instructions: {
+                    english: "Imagine you won the lottery! What's the first thing you would do? Write one sentence.",
+                    spanish: "¡Imagina que ganaste la lotería! ¿Qué es lo primero que harías? Escribe una oración."
+                }
+            },
+            {
+                id: 55,
+                name: {
+                    english: "Identify the Animal",
+                    spanish: "Identifica el Animal"
+                },
+                link: "https://images.pexels.com/photos/1483769/pexels-photo-1483769.jpeg",
+                description: {
+                    english: "Students are shown a picture of a less common animal and have to write its name.",
+                    spanish: "Los estudiantes ven una imagen de un animal menos común y tienen que escribir su nombre."
+                },
+                instructions: {
+                    english: "You know lion, tiger, and bear... but what is this animal? Can you write its name?",
+                    spanish: "Conoces león, tigre y oso... pero ¿qué animal es este? ¿Puedes escribir su nombre?"
+                }
+            },
+            {
+                id: 56,
+                name: {
+                    english: "My Perfect Day",
+                    spanish: "Mi Día Perfecto"
+                },
+                link: "",
+                description: {
+                    english: "Students write a short sentence describing their perfect day.",
+                    spanish: "Los estudiantes escriben una oración corta describiendo su día perfecto."
+                },
+                instructions: {
+                    english: "What does your perfect day look like? Write one sentence to describe it.",
+                    spanish: "¿Cómo se ve tu día perfecto? Escribe una oración para describirlo."
+                }
+            },
+            {
+                id: 57,
+                name: {
+                    english: "What's Your Favorite... and Why?",
+                    spanish: "¿Cuál es tu Favorito... y Por Qué?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a category (e.g., 'What's your favorite movie and why?'). Students write their answer.",
+                    spanish: "El profesor da una categoría (ej. '¿Cuál es tu película favorita y por qué?'). Los estudiantes escriben su respuesta."
+                },
+                instructions: {
+                    english: "Let's share our opinions! What's your favorite movie, and why do you like it?",
+                    spanish: "¡Compartamos nuestras opiniones! ¿Cuál es tu película favorita, y por qué te gusta?"
+                }
+            },
+            {
+                id: 58,
+                name: {
+                    english: "What's Happening in the Kitchen?",
+                    spanish: "¿Qué Pasa en la Cocina?"
+                },
+                link: "https://images.pexels.com/photos/8885141/pexels-photo-8885141.jpeg",
+                description: {
+                    english: "Students look at a chaotic or funny picture of a kitchen and describe one thing that is happening.",
+                    spanish: "Los estudiantes observan una imagen caótica o divertida de una cocina y describen una cosa que está pasando."
+                },
+                instructions: {
+                    english: "This kitchen is a mess! Look at the picture and write one sentence about something that is happening.",
+                    spanish: "¡Esta cocina es un desastre! Mira la imagen y escribe una oración sobre algo que está pasando."
+                }
+            },
+            {
+                id: 59,
+                name: {
+                    english: "What's the Opposite of...?",
+                    spanish: "¿Cuál es lo Opuesto de...?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a more challenging word (e.g., 'beautiful'). Students have to write the opposite.",
+                    spanish: "El profesor da una palabra más desafiante (ej. 'hermoso'). Los estudiantes tienen que escribir lo opuesto."
+                },
+                instructions: {
+                    english: "Let's find some more opposites! The word is 'beautiful'. What's the opposite?",
+                    spanish: "¡Encontremos más opuestos! La palabra es 'hermoso'. ¿Cuál es lo opuesto?"
+                }
+            },
+            {
+                id: 60,
+                name: {
+                    english: "My Hidden Talent",
+                    spanish: "Mi Talento Oculto"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about a hidden talent they have.",
+                    spanish: "Los estudiantes escriben una oración sobre un talento oculto que tienen."
+                },
+                instructions: {
+                    english: "Everyone has a hidden talent! What's yours? Write one sentence about something you're secretly good at.",
+                    spanish: "¡Todos tienen un talento oculto! ¿Cuál es el tuyo? Escribe una oración sobre algo en lo que eres secretamente bueno."
+                }
+            },
+            {
+                id: 61,
+                name: {
+                    english: "Which is Heavier?",
+                    spanish: "¿Cuál es Más Pesado?"
+                },
+                link: "https://us.123rf.com/450wm/tigatelu/tigatelu1809/tigatelu180900020/107953225-ilustraci%C3%B3n-de-vector-de-equilibrio-de-frutas-y-hamburguesas-de-dibujos-animados-en-la-escala.jpg?ver=6",
+                description: {
+                    english: "Students look at an image of a simple balance scale with two different objects and must decide which one is heavier.",
+                    spanish: "Los estudiantes observan una imagen de una balanza simple con dos objetos diferentes y deben decidir cuál es más pesado."
+                },
+                instructions: {
+                    english: "Use your logic! Look at the scale. Which object is heavier, the fruit or the hamburger?",
+                    spanish: "¡Usa tu lógica! Mira la balanza. ¿Qué objeto es más pesado, la fruta o la hamburguesa?"
+                }
+            },
+            {
+                id: 62,
+                name: {
+                    english: "If I Could Meet Anyone...",
+                    spanish: "Si Pudiera Conocer a Alguien..."
+                },
+                link: "",
+                description: {
+                    english: "If you could meet any person, living or dead, who would it be and why?",
+                    spanish: "Si pudieras conocer a cualquier persona, viva o muerta, ¿quién sería y por qué?"
+                },
+                instructions: {
+                    english: "Imagine you could meet anyone in the world, living or dead! Who would you choose, and why?",
+                    spanish: "¡Imagina que pudieras conocer a cualquier persona en el mundo, viva o muerta! ¿A quién elegirías, y por qué?"
+                }
+            },
+            {
+                id: 63,
+                name: {
+                    english: "Find the Five Differences",
+                    spanish: "Encuentra las Cinco Diferencias"
+                },
+                link: "https://i.pinimg.com/736x/c6/62/3d/c6623dfdea2d0946ab87645bb94b686e.jpg",
+                description: {
+                    english: "A slightly harder 'spot the difference' where students must look carefully at two detailed images to find the changes.",
+                    spanish: "Un 'encuentra las diferencias' un poco más difícil donde los estudiantes deben mirar cuidadosamente dos imágenes detalladas para encontrar los cambios."
+                },
+                instructions: {
+                    english: "Look very, very closely. These two pictures of a room look the same, but they are not! Can you find the 5 differences?",
+                    spanish: "Mira muy, muy de cerca. ¡Estas dos imágenes de una habitación se ven iguales, pero no lo son! ¿Puedes encontrar las 5 diferencias?"
+                }
+            },
+            {
+                id: 64,
+                name: {
+                    english: "My Favorite Place",
+                    spanish: "Mi Lugar Favorito"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite place in the world.",
+                    spanish: "Los estudiantes escriben una oración sobre su lugar favorito en el mundo."
+                },
+                instructions: {
+                    english: "Where is your favorite place? It could be anywhere in the world! Write one sentence about it.",
+                    spanish: "¿Dónde está tu lugar favorito? ¡Podría ser en cualquier parte del mundo! Escribe una oración sobre él."
+                }
+            },
+            {
+                id: 65,
+                name: {
+                    english: "What's the Plural?",
+                    spanish: "¿Cuál es el Plural?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a singular noun (e.g., 'child'). Students have to write the plural form.",
+                    spanish: "El profesor da un sustantivo singular (ej. 'niño'). Los estudiantes tienen que escribir la forma plural."
+                },
+                instructions: {
+                    english: "Let's practice plurals! The word is 'child'. What's the plural form?",
+                    spanish: "¡Practiquemos plurales! La palabra es 'niño'. ¿Cuál es la forma plural?"
+                }
+            },
+            {
+                id: 66,
+                name: {
+                    english: "If I Had a Time Machine...",
+                    spanish: "Si Tuviera una Máquina del Tiempo..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about where they would go if they had a time machine.",
+                    spanish: "Los estudiantes escriben una oración sobre dónde irían si tuvieran una máquina del tiempo."
+                },
+                instructions: {
+                    english: "Imagine you have a time machine! Where would you go? To the past or the future? Write one sentence.",
+                    spanish: "¡Imagina que tienes una máquina del tiempo! ¿Dónde irías? ¿Al pasado o al futuro? Escribe una oración."
+                }
+            },
+            {
+                id: 67,
+                name: {
+                    english: "What is this Sign?",
+                    spanish: "¿Qué es esta Señal?"
+                },
+                link: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk4F1BrNpSvo8GBFtzF6dMldl4dgp15nei1Q&s",
+                description: {
+                    english: "Students look at a picture of a common international sign and must explain what it means.",
+                    spanish: "Los estudiantes observan una imagen de una señal internacional común y deben explicar qué significa."
+                },
+                instructions: {
+                    english: "You see signs like this everywhere. What does this sign mean? Write it down.",
+                    spanish: "Ves señales como esta en todas partes. ¿Qué significa esta señal? Escríbelo."
+                }
+            },
+            {
+                id: 68,
+                name: {
+                    english: "My Favorite Season",
+                    spanish: "Mi Estación Favorita"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite season and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su estación favorita y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite season of the year? Spring, Summer, Fall, or Winter? And why do you like it? Write one sentence.",
+                    spanish: "¿Cuál es tu estación favorita del año? ¿Primavera, Verano, Otoño o Invierno? ¿Y por qué te gusta? Escribe una oración."
+                }
+            },
+            {
+                id: 69,
+                name: {
+                    english: "Where is the Cat?",
+                    spanish: "¿Dónde Está el Gato?"
+                },
+                link: "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg",
+                description: {
+                    english: "Students practice prepositions of place by describing where the cat is in relation to an object in the picture.",
+                    spanish: "Los estudiantes practican preposiciones de lugar describiendo dónde está el gato en relación con un objeto en la imagen."
+                },
+                instructions: {
+                    english: "Look at the picture. Where is the cat? Use a preposition in your answer (on, under, in, behind, etc.).",
+                    spanish: "Mira la imagen. ¿Dónde está el gato? Usa una preposición en tu respuesta (en, debajo, dentro, detrás, etc.)."
+                }
+            },
+            {
+                id: 70,
+                name: {
+                    english: "If I Were a Teacher...",
+                    spanish: "Si Fuera Profesor..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about what they would do if they were a teacher for a day.",
+                    spanish: "Los estudiantes escriben una oración sobre lo que harían si fueran profesor por un día."
+                },
+                instructions: {
+                    english: "Imagine you're the teacher for a day! What's one thing you would do? Write one sentence.",
+                    spanish: "¡Imagina que eres el profesor por un día! ¿Qué es una cosa que harías? Escribe una oración."
+                }
+            },
+            {
+                id: 71,
+                name: {
+                    english: "What's the Conjunction?",
+                    spanish: "¿Cuál es la Conjunción?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives two simple sentences. Students have to combine them with a conjunction (and, but, so, or).",
+                    spanish: "El profesor da dos oraciones simples. Los estudiantes tienen que combinarlas con una conjunción (y, pero, así que, o)."
+                },
+                instructions: {
+                    english: "Let's connect some sentences! Here are two: 'I like pizza. I like ice cream.' How can you combine them into one sentence?",
+                    spanish: "¡Conectemos algunas oraciones! Aquí hay dos: 'Me gusta la pizza. Me gusta el helado.' ¿Cómo puedes combinarlas en una oración?"
+                }
+            },
+            {
+                id: 72,
+                name: {
+                    english: "My Favorite Subject",
+                    spanish: "Mi Materia Favorita"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite subject in school and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su materia favorita en la escuela y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite subject in school? And why do you enjoy it? Write one sentence.",
+                    spanish: "¿Cuál es tu materia favorita en la escuela? ¿Y por qué la disfrutas? Escribe una oración."
+                }
+            },
+            {
+                id: 73,
+                name: {
+                    english: "What are they doing?",
+                    spanish: "¿Qué Están Haciendo?"
+                },
+                link: "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg",
+                description: {
+                    english: "Students look at a picture of people doing an activity and describe the action using a verb.",
+                    spanish: "Los estudiantes observan una imagen de personas haciendo una actividad y describen la acción usando un verbo."
+                },
+                instructions: {
+                    english: "Look at these people. What are they doing? Write one sentence to describe the action.",
+                    spanish: "Mira a estas personas. ¿Qué están haciendo? Escribe una oración para describir la acción."
+                }
+            },
+            {
+                id: 74,
+                name: {
+                    english: "If I Could Change the World...",
+                    spanish: "Si Pudiera Cambiar el Mundo..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about one thing they would change about the world.",
+                    spanish: "Los estudiantes escriben una oración sobre una cosa que cambiarían del mundo."
+                },
+                instructions: {
+                    english: "If you had the power to change one thing in the world, what would it be? Write one sentence.",
+                    spanish: "Si tuvieras el poder de cambiar una cosa en el mundo, ¿qué sería? Escribe una oración."
+                }
+            },
+            {
+                id: 75,
+                name: {
+                    english: "Maze Challenge",
+                    spanish: "Desafío del Laberinto"
+                },
+                link: "https://static.vecteezy.com/system/resources/thumbnails/002/935/254/small_2x/black-rectangular-labyrinth-game-for-kids-puzzle-for-children-maze-conundrum-flat-illustration-isolated-on-white-background-free-vector.jpg",
+                description: {
+                    english: "Students look at a simple maze and must mentally (or with their finger) find the path from start to finish.",
+                    spanish: "Los estudiantes observan un laberinto simple y deben encontrar mentalmente (o con el dedo) el camino de inicio a fin."
+                },
+                instructions: {
+                    english: "Can you solve this maze? Help the mouse find the cheese! Just look, don't draw on the screen.",
+                    spanish: "¿Puedes resolver este laberinto? ¡Ayuda al ratón a encontrar el queso! Solo mira, no dibujes en la pantalla."
+                }
+            },
+            {
+                id: 76,
+                name: {
+                    english: "My Dream Job",
+                    spanish: "Mi Trabajo Soñado"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their dream job.",
+                    spanish: "Los estudiantes escriben una oración sobre su trabajo soñado."
+                },
+                instructions: {
+                    english: "What do you want to be when you grow up? Write one sentence about your dream job.",
+                    spanish: "¿Qué quieres ser cuando crezcas? Escribe una oración sobre tu trabajo soñado."
+                }
+            },
+            {
+                id: 77,
+                name: {
+                    english: "What's the Interjection?",
+                    spanish: "¿Cuál es la Interjección?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a situation (e.g., \"You just won the lottery!\"). Students have to write an interjection to express their excitement.",
+                    spanish: "El profesor da una situación (ej. \"¡Acabas de ganar la lotería!\"). Los estudiantes tienen que escribir una interjección para expresar su emoción."
+                },
+                instructions: {
+                    english: "Imagine you just won the lottery! What would you shout? Write an interjection to show your excitement (like Wow! or Yes!).",
+                    spanish: "¡Imagina que acabas de ganar la lotería! ¿Qué gritarías? Escribe una interjección para mostrar tu emoción (como ¡Guau! o ¡Sí!)."
+                }
+            },
+            {
+                id: 78,
+                name: {
+                    english: "If I Were Invisible...",
+                    spanish: "Si Fuera Invisible..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about what they would do if they were invisible for a day.",
+                    spanish: "Los estudiantes escriben una oración sobre lo que harían si fueran invisibles por un día."
+                },
+                instructions: {
+                    english: "Imagine you're invisible for a day! What's one mischievous thing you would do? Write one sentence.",
+                    spanish: "¡Imagina que eres invisible por un día! ¿Qué cosa traviesa harías? Escribe una oración."
+                }
+            },
+            {
+                id: 79,
+                name: {
+                    english: "What's the Comparative?",
+                    spanish: "¿Cuál es el Comparativo?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives an adjective (e.g., 'big'). Students have to write the comparative form.",
+                    spanish: "El profesor da un adjetivo (ej. 'grande'). Los estudiantes tienen que escribir la forma comparativa."
+                },
+                instructions: {
+                    english: "Let's make some comparisons! The adjective is 'big'. What's the comparative form?",
+                    spanish: "¡Hagamos algunas comparaciones! El adjetivo es 'grande'. ¿Cuál es la forma comparativa?"
+                }
+            },
+            {
+                id: 80,
+                name: {
+                    english: "My Favorite Holiday",
+                    spanish: "Mi Día Festivo Favorito"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite holiday and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su día festivo favorito y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite holiday of the year? And why do you love it? Write one sentence.",
+                    spanish: "¿Cuál es tu día festivo favorito del año? ¿Y por qué lo amas? Escribe una oración."
+                }
+            },
+            {
+                id: 81,
+                name: {
+                    english: "What's the Superlative?",
+                    spanish: "¿Cuál es el Superlativo?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives an adjective (e.g., 'good'). Students have to write the superlative form.",
+                    spanish: "El profesor da un adjetivo (ej. 'bueno'). Los estudiantes tienen que escribir la forma superlativa."
+                },
+                instructions: {
+                    english: "Let's find the best! The adjective is 'good'. What's the superlative form?",
+                    spanish: "¡Encontremos el mejor! El adjetivo es 'bueno'. ¿Cuál es la forma superlativa?"
+                }
+            },
+            {
+                id: 82,
+                name: {
+                    english: "If I Could Talk to Animals...",
+                    spanish: "Si Pudiera Hablar con Animales..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about what they would ask an animal if they could talk to them.",
+                    spanish: "Los estudiantes escriben una oración sobre qué le preguntarían a un animal si pudieran hablar con él."
+                },
+                instructions: {
+                    english: "Imagine you could talk to animals! What's one question you would ask your favorite animal?",
+                    spanish: "¡Imagina que pudieras hablar con animales! ¿Qué pregunta le harías a tu animal favorito?"
+                }
+            },
+            {
+                id: 83,
+                name: {
+                    english: "What's the Past Tense?",
+                    spanish: "¿Cuál es el Pasado?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a verb in the present tense (e.g., 'go'). Students have to write the past tense form.",
+                    spanish: "El profesor da un verbo en presente (ej. 'ir'). Los estudiantes tienen que escribir la forma en pasado."
+                },
+                instructions: {
+                    english: "Let's go back in time! The verb is 'go'. What's the past tense?",
+                    spanish: "¡Volvamos al pasado! El verbo es 'ir'. ¿Cuál es el pasado?"
+                }
+            },
+            {
+                id: 84,
+                name: {
+                    english: "My Favorite Book",
+                    spanish: "Mi Libro Favorito"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite book and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su libro favorito y por qué."
+                },
+                instructions: {
+                    english: "What's the best book you've ever read? And why did you like it so much? Write one sentence.",
+                    spanish: "¿Cuál es el mejor libro que has leído? ¿Y por qué te gustó tanto? Escribe una oración."
+                }
+            },
+            {
+                id: 85,
+                name: {
+                    english: "What's the Future Tense?",
+                    spanish: "¿Cuál es el Futuro?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a verb in the present tense (e.g., 'eat'). Students have to write the future tense form.",
+                    spanish: "El profesor da un verbo en presente (ej. 'comer'). Los estudiantes tienen que escribir la forma en futuro."
+                },
+                instructions: {
+                    english: "Let's look to the future! The verb is 'eat'. How do you say it in the future tense?",
+                    spanish: "¡Miremos al futuro! El verbo es 'comer'. ¿Cómo se dice en futuro?"
+                }
+            },
+            {
+                id: 86,
+                name: {
+                    english: "If I Had Three Wishes...",
+                    spanish: "Si Tuviera Tres Deseos..."
+                },
+                link: "",
+                description: {
+                    english: "Students write down their three wishes.",
+                    spanish: "Los estudiantes escriben sus tres deseos."
+                },
+                instructions: {
+                    english: "A genie has granted you three wishes! What would you wish for? Write them down.",
+                    spanish: "¡Un genio te ha concedido tres deseos! ¿Qué pedirías? Escríbelos."
+                }
+            },
+            {
+                id: 87,
+                name: {
+                    english: "What's the Contraction?",
+                    spanish: "¿Cuál es la Contracción?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives two words (e.g., 'do not'). Students have to write the contraction.",
+                    spanish: "El profesor da dos palabras (ej. 'do not'). Los estudiantes tienen que escribir la contracción."
+                },
+                instructions: {
+                    english: "Let's make it shorter! The words are 'do not'. What's the contraction?",
+                    spanish: "¡Hagámoslo más corto! Las palabras son 'do not'. ¿Cuál es la contracción?"
+                }
+            },
+            {
+                id: 88,
+                name: {
+                    english: "My Favorite Song",
+                    spanish: "Mi Canción Favorita"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite song and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su canción favorita y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite song right now? And why do you like it? Write one sentence.",
+                    spanish: "¿Cuál es tu canción favorita ahora mismo? ¿Y por qué te gusta? Escribe una oración."
+                }
+            },
+            {
+                id: 89,
+                name: {
+                    english: "Whose is it?",
+                    spanish: "¿De Quién Es?"
+                },
+                link: "https://images.pexels.com/photos/59523/pexels-photo-59523.jpeg",
+                description: {
+                    english: "Students look at an image showing an object and a person/animal, and they write a possessive sentence.",
+                    spanish: "Los estudiantes observan una imagen que muestra un objeto y una persona/animal, y escriben una oración posesiva."
+                },
+                instructions: {
+                    english: "Look at the picture. Whose bone is it? Write a sentence using the possessive 's.",
+                    spanish: "Mira la imagen. ¿De quién es el hueso? Escribe una oración usando el posesivo 's."
+                }
+            },
+            {
+                id: 90,
+                name: {
+                    english: "If I Were President...",
+                    spanish: "Si Fuera Presidente..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about the first thing they would do if they were president.",
+                    spanish: "Los estudiantes escriben una oración sobre lo primero que harían si fueran presidente."
+                },
+                instructions: {
+                    english: "Imagine you're the president! What's the first law you would make? Write one sentence.",
+                    spanish: "¡Imagina que eres el presidente! ¿Cuál sería la primera ley que harías? Escribe una oración."
+                }
+            },
+            {
+                id: 91,
+                name: {
+                    english: "What's the Homophone?",
+                    spanish: "¿Cuál es el Homófono?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a word (e.g., 'see'). Students have to write a homophone.",
+                    spanish: "El profesor da una palabra (ej. 'see'). Los estudiantes tienen que escribir un homófono."
+                },
+                instructions: {
+                    english: "Let's find some homophones! The word is 'see'. Can you think of another word that sounds the same but has a different meaning and spelling?",
+                    spanish: "¡Encontremos algunos homófonos! La palabra es 'see'. ¿Puedes pensar en otra palabra que suene igual pero tenga diferente significado y escritura?"
+                }
+            },
+            {
+                id: 92,
+                name: {
+                    english: "My Favorite Game",
+                    spanish: "Mi Juego Favorito"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite game (video game, board game, etc.) and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su juego favorito (videojuego, juego de mesa, etc.) y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite game to play? And why is it so much fun? Write one sentence.",
+                    spanish: "¿Cuál es tu juego favorito para jugar? ¿Y por qué es tan divertido? Escribe una oración."
+                }
+            },
+            {
+                id: 93,
+                name: {
+                    english: "What's the Synonym?",
+                    spanish: "¿Cuál es el Sinónimo?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a word (e.g., 'happy'). Students have to write a synonym.",
+                    spanish: "El profesor da una palabra (ej. 'feliz'). Los estudiantes tienen que escribir un sinónimo."
+                },
+                instructions: {
+                    english: "Let's find some synonyms! The word is 'happy'. Can you think of another word that means the same thing?",
+                    spanish: "¡Encontremos algunos sinónimos! La palabra es 'feliz'. ¿Puedes pensar en otra palabra que signifique lo mismo?"
+                }
+            },
+            {
+                id: 94,
+                name: {
+                    english: "If I Could Invent Something...",
+                    spanish: "Si Pudiera Inventar Algo..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about what they would invent.",
+                    spanish: "Los estudiantes escriben una oración sobre qué inventarían."
+                },
+                instructions: {
+                    english: "If you could invent anything, what would it be? And what would it do? Write one sentence.",
+                    spanish: "Si pudieras inventar cualquier cosa, ¿qué sería? ¿Y qué haría? Escribe una oración."
+                }
+            },
+            {
+                id: 95,
+                name: {
+                    english: "What's the Antonym?",
+                    spanish: "¿Cuál es el Antónimo?"
+                },
+                link: "",
+                description: {
+                    english: "The teacher gives a word (e.g., 'fast'). Students have to write an antonym.",
+                    spanish: "El profesor da una palabra (ej. 'rápido'). Los estudiantes tienen que escribir un antónimo."
+                },
+                instructions: {
+                    english: "Let's find some antonyms! The word is 'fast'. What's the opposite?",
+                    spanish: "¡Encontremos algunos antónimos! La palabra es 'rápido'. ¿Cuál es lo opuesto?"
+                }
+            },
+            {
+                id: 96,
+                name: {
+                    english: "My Favorite Animal",
+                    spanish: "Mi Animal Favorito"
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about their favorite animal and why.",
+                    spanish: "Los estudiantes escriben una oración sobre su animal favorito y por qué."
+                },
+                instructions: {
+                    english: "What's your favorite animal? And what makes it so special? Write one sentence.",
+                    spanish: "¿Cuál es tu animal favorito? ¿Y qué lo hace tan especial? Escribe una oración."
+                }
+            },
+            {
+                id: 97,
+                name: {
+                    english: "Describe this Transport",
+                    spanish: "Describe este Transporte"
+                },
+                link: "https://images.pexels.com/photos/386009/pexels-photo-386009.jpeg",
+                description: {
+                    english: "Students look at a picture of an unusual mode of transportation and write a sentence about it.",
+                    spanish: "Los estudiantes observan una imagen de un modo de transporte inusual y escriben una oración sobre él."
+                },
+                instructions: {
+                    english: "Look at this way to travel! What is it? Is it fast or slow? Write one sentence about it.",
+                    spanish: "¡Mira esta forma de viajar! ¿Qué es? ¿Es rápido o lento? Escribe una oración sobre ello."
+                }
+            },
+            {
+                id: 98,
+                name: {
+                    english: "If I Could Live Anywhere...",
+                    spanish: "Si Pudiera Vivir en Cualquier Lugar..."
+                },
+                link: "",
+                description: {
+                    english: "Students write a sentence about where they would live if they could live anywhere in the world.",
+                    spanish: "Los estudiantes escriben una oración sobre dónde vivirían si pudieran vivir en cualquier lugar del mundo."
+                },
+                instructions: {
+                    english: "If you could live in any country in the world, where would you choose? And why? Write one sentence.",
+                    spanish: "Si pudieras vivir en cualquier país del mundo, ¿dónde elegirías? ¿Y por qué? Escribe una oración."
+                }
+            },
+            {
+                id: 99,
+                name: {
+                    english: "Continue the Pattern",
+                    spanish: "Continúa el Patrón"
+                },
+                link: "https://i.imgur.com/2hMFZoD.jpg",
+                description: {
+                    english: "Students look at a simple visual pattern and must draw or describe the next item in the sequence.",
+                    spanish: "Los estudiantes observan un patrón visual simple y deben dibujar o describir el siguiente elemento en la secuencia."
+                },
+                instructions: {
+                    english: "Be a pattern detective! Look at the sequence of shapes. What comes next? Draw it or write its name.",
+                    spanish: "¡Sé un detective de patrones! Mira la secuencia de formas. ¿Qué sigue? Dibújalo o escribe su nombre."
+                }
+            },
+            {
+                id: 100,
+                name: {
+                    english: "My Goal for Today",
+                    spanish: "Mi Meta para Hoy"
+                },
+                link: "",
+                description: {
+                    english: "Students write one goal they want to accomplish in class today.",
+                    spanish: "Los estudiantes escriben una meta que quieren lograr en clase hoy."
+                },
+                instructions: {
+                    english: "Let's set a goal for today's class! What's one thing you want to learn or achieve today? Write it down.",
+                    spanish: "¡Establezcamos una meta para la clase de hoy! ¿Qué es una cosa que quieres aprender o lograr hoy? Escríbelo."
+                }
+            }
+        ];
+
+        // Google Corporate Colors
+        const googleColors = [
+            'bg-blue-600',    // Google Blue
+            'bg-red-500',     // Google Red
+            'bg-yellow-500',  // Google Yellow
+            'bg-green-500',   // Google Green
+            'bg-purple-600',  // Purple
+            'bg-indigo-600',  // Indigo
+            'bg-pink-500',    // Pink
+            'bg-teal-500'     // Teal
+        ];
+
+        let isLaunching = false;
+        let currentBellRinger = null;
+        let isEnglish = false;
+        let instructionInAlternateLanguage = false;
+        let usedBellRingers = [];
+        
+        // Translation texts
+        const translations = {
+            spanish: {
+                title: "Bellringer Launcher",
+                subtitle: "¡Elige un rompe-hielo al azar para comenzar la clase!",
+                translateBtn: "🌐 Translate to English",
+                available: "Bellringers disponibles:",
+                launchBtn: "🎲 Elegir Bellringer",
+                launching: "Eligiendo...",
+                modalTitle: "¡Bellringer del Día!",
+                studentLabel: "📝 Instrucciones:",
+                linkBtn: "🔗 Recurso Adicional",
+                chooseAnotherBtn: "🎲 Elegir Otro Distinto",
+                exitBtn: "✨ ¡Perfecto! Cerrar",
+                footer: "© 2025 por Eduardo Ruiz (@ejruizgarcia). Esta app ha sido desarrollada utilizando Canva Code y tiene licencia CC BY-NC 4.0.",
+                imageFrom: "Imagen de:"
+            },
+            english: {
+                title: "Bellringer Launcher",
+                subtitle: "Choose a random ice-breaker to start the class!",
+                translateBtn: "🌐 Traducir al Español",
+                available: "Available Bellringers:",
+                launchBtn: "🎲 Choose Bellringer",
+                launching: "Choosing...",
+                modalTitle: "Today's Bellringer!",
+                studentLabel: "📝 Instructions:",
+                linkBtn: "🔗 Additional Resource",
+                chooseAnotherBtn: "🎲 Choose Another One",
+                exitBtn: "✨ Perfect! Close",
+                footer: "© 2025 by Eduardo Ruiz (@ejruizgarcia). This app has been developed using Canva Code and is licensed under CC BY-NC 4.0.",
+                imageFrom: "Image from:"
+            }
+        };
+
+        // DOM Elements
+        const launchBtn = document.getElementById('launchBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('closeBtn');
+        const exitBtn = document.getElementById('exitBtn');
+        const chooseAnotherBtn = document.getElementById('chooseAnotherBtn');
+        const bellRingerName = document.getElementById('bellRingerName');
+        const studentInstructions = document.getElementById('studentInstructions');
+        const studentLabel = document.getElementById('studentLabel');
+        const descriptionBtn = document.getElementById('descriptionBtn');
+        const description = document.getElementById('description');
+        const descriptionText = document.getElementById('descriptionText');
+        const linkBtn = document.getElementById('linkBtn');
+        const dataCount = document.getElementById('dataCount');
+        const translateBtn = document.getElementById('translateBtn');
+        const imageContainer = document.getElementById('imageContainer');
+        const bellRingerImage = document.getElementById('bellRingerImage');
+        const contentLayout = document.getElementById('contentLayout');
+        const textContent = document.getElementById('textContent');
+        const instructionToggle = document.getElementById('instructionToggle');
+        const footer = document.querySelector('footer p');
+        const zoomBtn = document.getElementById('zoomBtn');
+        const zoomModal = document.getElementById('zoomModal');
+        const zoomedImage = document.getElementById('zoomedImage');
+        const closeZoomBtn = document.getElementById('closeZoomBtn');
+        const watermarkText = document.getElementById('watermarkText');
+
+        // Update data count
+        function updateDataCount() {
+            dataCount.textContent = bellRingers.length;
+        }
+        
+        // Check if URL is an image
+        function isImageUrl(url) {
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+            const lowerUrl = url.toLowerCase();
+            return imageExtensions.some(ext => lowerUrl.includes(ext)) || 
+                   lowerUrl.includes('image') || 
+                   lowerUrl.includes('img') ||
+                   lowerUrl.includes('photo') ||
+                   lowerUrl.includes('picture');
+        }
+        
+        // Extract domain from URL for watermark
+        function extractDomain(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.hostname.replace('www.', '');
+            } catch (e) {
+                return url.split('/')[2] || url;
+            }
+        }
+        
+        // Update instruction text based on toggle state
+        function updateInstructionText() {
+            if (currentBellRinger) {
+                const instructionLang = instructionInAlternateLanguage ? 
+                    (isEnglish ? 'spanish' : 'english') : 
+                    (isEnglish ? 'english' : 'spanish');
+                studentInstructions.textContent = currentBellRinger.instructions[instructionLang];
+            }
+        }
+
+        // Update interface language
+        function updateLanguage() {
+            const lang = isEnglish ? 'english' : 'spanish';
+            const t = translations[lang];
+            
+            document.querySelector('h1').textContent = t.title;
+            document.querySelector('p').textContent = t.subtitle;
+            translateBtn.innerHTML = t.translateBtn;
+            document.querySelector('.text-xs.text-black').innerHTML = `${t.available} <span id="dataCount">${bellRingers.length}</span>`;
+            footer.textContent = t.footer;
+            
+            // Update button text only if not launching
+            if (!isLaunching) {
+                btnText.textContent = t.launchBtn;
+            }
+            
+            // Update modal elements if modal is open
+            if (!modal.classList.contains('hidden')) {
+                document.querySelector('#modal h2').textContent = t.modalTitle;
+                studentLabel.textContent = t.studentLabel;
+                linkBtn.textContent = t.linkBtn;
+                chooseAnotherBtn.textContent = t.chooseAnotherBtn;
+                exitBtn.textContent = t.exitBtn;
+                // Update instruction text when language changes
+                updateInstructionText();
+            }
+        }
+
+        // Translation functionality
+        translateBtn.addEventListener('click', function() {
+            isEnglish = !isEnglish;
+            updateLanguage();
+        });
+
+        // Instruction language toggle
+        instructionToggle.addEventListener('click', function() {
+            instructionInAlternateLanguage = !instructionInAlternateLanguage;
+            updateInstructionText();
+        });
+
+        // Launch Bell-Ringer
+        launchBtn.addEventListener('click', function() {
+            if (isLaunching) return;
+            
+            if (bellRingers.length === 0) {
+                alert('⚠️ No hay bellringers cargados. Usa el botón "Actualizar Bellringers" primero.');
+                return;
+            }
+            
+            isLaunching = true;
+            const lang = isEnglish ? 'english' : 'spanish';
+            const t = translations[lang];
+            btnText.textContent = t.launching;
+            spinner.classList.remove('hidden');
+            launchBtn.classList.add('shake');
+            
+            // Simulate loading animation
+            setTimeout(() => {
+                // Get available bellringers (not used yet)
+                let availableBellRingers = bellRingers.filter(br => !usedBellRingers.includes(br.id));
+                
+                // If all have been used, reset the used list
+                if (availableBellRingers.length === 0) {
+                    usedBellRingers = [];
+                    availableBellRingers = bellRingers;
+                }
+                
+                // Select random bell-ringer from available ones
+                currentBellRinger = availableBellRingers[Math.floor(Math.random() * availableBellRingers.length)];
+                
+                // Mark this bellringer as used
+                usedBellRingers.push(currentBellRinger.id);
+                
+                // Select random color
+                const randomColor = googleColors[Math.floor(Math.random() * googleColors.length)];
+                
+                // Update modal content with current language
+                const lang = isEnglish ? 'english' : 'spanish';
+                bellRingerName.textContent = currentBellRinger.name[lang];
+                descriptionText.textContent = currentBellRinger.description[lang];
+                
+                // Reset instruction toggle state when new bellringer is selected
+                instructionInAlternateLanguage = false;
+                updateInstructionText();
+                
+                // Handle image display and layout
+                if (isImageUrl(currentBellRinger.link)) {
+                    bellRingerImage.src = currentBellRinger.link;
+                    imageContainer.classList.remove('hidden');
+                    linkBtn.style.display = 'none'; // Hide link button if it's an image
+                    // Update watermark
+                    const domain = extractDomain(currentBellRinger.link);
+                    const lang = isEnglish ? 'english' : 'spanish';
+                    const t = translations[lang];
+                    watermarkText.textContent = `${t.imageFrom} ${domain}`;
+                    // Change to side-by-side layout for images
+                    contentLayout.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+                } else {
+                    imageContainer.classList.add('hidden');
+                    // Show link button only if URL exists and is not empty
+                    if (currentBellRinger.link && currentBellRinger.link.trim() !== '') {
+                        linkBtn.style.display = 'inline-block';
+                    } else {
+                        linkBtn.style.display = 'none';
+                    }
+                    // Single column layout for text-only
+                    contentLayout.className = 'grid grid-cols-1 gap-6';
+                }
+                
+                // Apply random color to modal
+                modalContent.className = modalContent.className.replace(/bg-\w+-\d+/, randomColor);
+                
+                // Update modal text with current language
+                document.querySelector('#modal h2').textContent = t.modalTitle;
+                studentLabel.textContent = t.studentLabel;
+                linkBtn.textContent = t.linkBtn;
+                chooseAnotherBtn.textContent = t.chooseAnotherBtn;
+                exitBtn.textContent = t.exitBtn;
+                
+                // Show modal
+                modal.classList.remove('hidden');
+                
+                // Reset button
+                setTimeout(() => {
+                    const lang = isEnglish ? 'english' : 'spanish';
+                    const t = translations[lang];
+                    btnText.textContent = t.launchBtn;
+                    spinner.classList.add('hidden');
+                    launchBtn.classList.remove('shake');
+                    isLaunching = false;
+                }, 500);
+                
+            }, 2000);
+        });
+
+        // Description toggle
+        descriptionBtn.addEventListener('click', function() {
+            description.classList.toggle('hidden');
+            const isVisible = !description.classList.contains('hidden');
+            descriptionBtn.innerHTML = isVisible ? '<span class="text-xl">❌</span>' : '<span class="text-xl">❓</span>';
+        });
+
+        // Link button
+        linkBtn.addEventListener('click', function() {
+            if (currentBellRinger && currentBellRinger.link) {
+                window.open(currentBellRinger.link, '_blank');
+            }
+        });
+
+        // Close modal functions
+        function closeModal() {
+            modal.classList.add('hidden');
+            description.classList.add('hidden');
+            descriptionBtn.innerHTML = '<span class="text-xl">❓</span>';
+            imageContainer.classList.add('hidden'); // Hide image when closing
+            instructionInAlternateLanguage = false; // Reset instruction toggle
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        exitBtn.addEventListener('click', closeModal);
+        
+        // Choose another bellringer
+        chooseAnotherBtn.addEventListener('click', function() {
+            closeModal();
+            // Small delay to allow modal to close, then trigger new selection
+            setTimeout(() => {
+                launchBtn.click();
+            }, 300);
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Image zoom functionality
+        zoomBtn.addEventListener('click', function() {
+            if (currentBellRinger && bellRingerImage.src) {
+                zoomedImage.src = bellRingerImage.src;
+                zoomModal.classList.remove('hidden');
+            }
+        });
+
+        // Close zoom modal
+        function closeZoomModal() {
+            zoomModal.classList.add('hidden');
+        }
+
+        closeZoomBtn.addEventListener('click', closeZoomModal);
+
+        // Close zoom modal when clicking outside
+        zoomModal.addEventListener('click', function(e) {
+            if (e.target === zoomModal) {
+                closeZoomModal();
+            }
+        });
+
+
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (!zoomModal.classList.contains('hidden')) {
+                    closeZoomModal();
+                } else if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+            if (e.key === ' ' && modal.classList.contains('hidden') && !isLaunching) {
+                e.preventDefault();
+                launchBtn.click();
+            }
+        });
+
+        // Initialize
+        updateDataCount();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96c0e74026e9f769',t:'MTc1NDY3NTkyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
